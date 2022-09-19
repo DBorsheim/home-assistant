@@ -1,0 +1,75 @@
+- sensor:
+    - name: "Home Security State"
+      state: >
+        {% set fd = states('lock.front_door_lock') %}
+        {% set bd = states('binary_sensor.back_door_lock') %}
+        {% set gd = states('binary_sensor.garage_door_contact_sensor') %}
+        {% set sd = states('binary_sensor.garage_side_door_lock') %}
+
+        {% if fd == 'locked' and bd == 'off' and sd == 'off' and gd == 'off' -%}
+          Secure
+        {%- elif fd == 'unlocked' and bd == 'off' and sd == 'off' and gd == 'off' -%}
+          Front Door Unlocked
+        {%- elif fd == 'locked' and bd == 'on' and sd == 'off' and gd == 'off' -%}
+          Back Door Unlocked
+        {%- elif fd == 'locked' and bd == 'off' and sd == 'on' and gd == 'off' -%}
+          Side Door Unlocked
+        {%- elif fd == 'locked' and bd == 'off' and sd == 'off' and gd == 'on' -%}
+          Garage Door Open
+
+        {%- elif fd == 'unlocked' and bd == 'on' and sd == 'off' and gd == 'off' -%}
+          Front and Back Door Unlocked
+        {%- elif fd == 'unlocked' and bd == 'off' and sd == 'on' and gd == 'off' -%}
+          Front and Side Door Unlocked
+        {%- elif fd == 'unlocked' and bd == 'off' and sd == 'off' and gd == 'on' -%}
+          Front Door Unlocked and Garage Open
+        {%- elif fd == 'unlocked' and bd == 'on' and sd == 'on' and gd == 'off' -%}
+          Front Back and Side Door Unlocked
+        {%- elif fd == 'unlocked' and bd == 'on' and sd == 'off' and gd == 'on' -%}
+          Front and Back Door Unlocked and Garage Door Open
+        {%- elif fd == 'unlocked' and bd == 'off' and sd == 'on' and gd == 'on' -%}
+          Front and Side Door Unlocked and Garage Door Open
+
+        {%- elif fd == 'locked' and bd == 'on' and sd == 'on' and gd == 'off' -%}
+          Back and Side Door Unlocked
+        {%- elif fd == 'locked' and bd == 'on' and sd == 'off' and gd == 'on' -%}
+          Back Door Unlocked and Garage Door Open
+        {%- elif fd == 'locked' and bd == 'on' and sd == 'on' and gd == 'on' -%}
+          Back and Side Door Unlocked and Garage Door Open
+
+        {%- elif fd == 'locked' and bd == 'off' and sd == 'on' and gd == 'on' -%}
+          Side Door Unlocked and Garage Door Open
+
+        {%- else -%}
+          Front Back and Side Doors Unlocked and Garage Open
+        {%- endif %}
+      icon: >
+        {% if is_state('binary_sensor.front_door_lock', 'off') and is_state('binary_sensor.back_door_lock', 'off') and is_state('binary_sensor.garage_door_contact_sensor', 'off') and is_state('binary_sensor.garage_side_door_lock', 'off')-%}
+          mdi:lock
+        {%- else -%}
+          mdi:lock-open
+        {%- endif %}
+
+        
+
+- sensor:
+    - name: "Time Sensor"
+      state: >
+        {% set time = states('sensor.time') %}
+        {% set hour = time[:2]|int %}
+        {{ '{:d}:{}'.format(hour if hour == 12 else 12 if hour == 00  else hour % 12, time[3:5]) }}
+      attributes:
+        am_pm: >
+          {% set time = states('sensor.time') %}
+          {% set hour = time[:2]|int %}
+          {{ 'pm' if hour>11 else 'am' }}
+      icon: mdi:clock
+
+- sensor:
+    - name: "Date Sensor"
+      state: "{{ ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31' ][ now().day-1] }}"
+      attributes:
+        weekday: "{{ ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][now().weekday()] }}"
+        month: "{{ ['January','February','March','April','May','June','July','August','September','October','November','December'][now().month-1] }}"
+        day_ordinal: "{{ ['st','nd','rd','th','th','th','th','th','th','th','th','th','th','th','th','th','th','th','th','th','st','th','rd','th','th','th','th','th','th','th','st' ][ now().day-1] }}"
+      icon: mdi:calendar
